@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.*;
 
 public class UsernameTest {
     @ParameterizedTest
-    @ValueSource(strings = {"bosse", "And-ers", "joakim_gidlund", "@tester", "Quad", "...."})
+    @ValueSource(strings = {"bosse", "And-ers", "joakim_gidlund", "@tester", "Quad", "....", "tester123", "123456789"})
     void correctUsername() {
         assertThat(Username.validate("bosse")).isTrue();
     }
