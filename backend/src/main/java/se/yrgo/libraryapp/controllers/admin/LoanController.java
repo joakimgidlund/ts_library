@@ -1,5 +1,6 @@
 package se.yrgo.libraryapp.controllers.admin;
 
+import java.sql.SQLException;
 import java.util.List;
 import com.google.inject.Inject;
 import io.jooby.annotations.GET;

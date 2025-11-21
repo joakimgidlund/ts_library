@@ -8,16 +8,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.security.auth.login.CredentialException;
-
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import io.jooby.Context;
-import io.jooby.internal.ContextAsServiceInitializer;
-import io.jooby.internal.ReadOnlyContext;
 import se.yrgo.libraryapp.dao.RoleDao;
 import se.yrgo.libraryapp.dao.SessionDao;
 import se.yrgo.libraryapp.entities.Role;
@@ -46,7 +42,7 @@ class LoginControllerTest {
 
         when(userService.validate(loginData.getUsername(), loginData.getPassword())).thenReturn(Optional.of(id));
         when(roleDao.get(id)).thenReturn(List.of(Role.ADMIN, Role.USER));
-        when(sessionDao.create(id)).thenReturn(new UUID(0, 0));
+        when(sessionDao.create(id)).thenReturn(UUID.randomUUID());
 
         assertThat(loginController.login(context, sessionCookie, loginData)).isEqualTo(userRoles);
     }
