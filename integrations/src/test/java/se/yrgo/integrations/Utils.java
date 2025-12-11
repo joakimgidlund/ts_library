@@ -9,6 +9,8 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import se.yrgo.integrations.pos.LoanPage;
+import se.yrgo.integrations.pos.LoginPage;
 import se.yrgo.integrations.pos.SearchPage;
 import se.yrgo.integrations.pos.StartPage;
 
@@ -27,6 +29,19 @@ public final class Utils {
         driver.manage().window().maximize();
         driver.get("http://frontend/search");
         return new SearchPage(driver);
+    }
+
+    public static LoginPage openLoginPage(WebDriver driver) {
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(2));
+        driver.manage().window().maximize();
+        driver.get("http://frontend/login");
+        return new LoginPage(driver);
+    }
+    public static LoanPage openLoanPageAsAdmin(WebDriver driver) {
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(2));
+        driver.manage().window().maximize();
+        driver.get("http://frontend/admin/loans");
+        return new LoanPage(driver);
     }
 
     public static WebElement find(WebDriver driver, By locator) {
