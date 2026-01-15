@@ -1,12 +1,12 @@
 package se.yrgo.libraryapp.dao;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import java.sql.*;
 import java.util.Optional;
 
 import javax.sql.DataSource;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -20,7 +20,7 @@ class UserDaoTest {
     @Mock
     private Connection conn;
     @Mock
-    private Statement stmt;
+    private PreparedStatement stmt;
     @Mock
     private ResultSet rs;
 
@@ -31,8 +31,8 @@ class UserDaoTest {
         final String passwordHash = "$argon2i$v=19$m=16,t=2,p=1$QldXU09Sc2dzOWdUalBKQw$LgKb6x4usOpDLTlXCBVhxA";
 
         when(ds.getConnection()).thenReturn(conn);
-        when(conn.createStatement()).thenReturn(stmt);
-        when(stmt.executeQuery(contains(username))).thenReturn(rs);
+        when(conn.prepareStatement("SELECT id, password_hash FROM user WHERE user = ?")).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(rs);
         when(rs.next()).thenReturn(true, false);
         when(rs.getInt("id")).thenReturn(id.getId());
         when(rs.getString("password_hash")).thenReturn(passwordHash);
@@ -49,8 +49,8 @@ class UserDaoTest {
         final String username = "test";
 
         when(ds.getConnection()).thenReturn(conn);
-        when(conn.createStatement()).thenReturn(stmt);
-        when(stmt.executeQuery(contains(username))).thenReturn(rs);
+        when(conn.prepareStatement("SELECT id, password_hash FROM user WHERE user = ?")).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(rs);
         when(rs.next()).thenReturn(false);
 
         UserDao userDao = new UserDao(ds);
@@ -67,8 +67,8 @@ class UserDaoTest {
         final User expectedUser = new User(id, username, realname);
 
         when(ds.getConnection()).thenReturn(conn);
-        when(conn.createStatement()).thenReturn(stmt);
-        when(stmt.executeQuery(anyString())).thenReturn(rs);
+        when(conn.prepareStatement("SELECT user, realname FROM user WHERE id = ?")).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(rs);
         when(rs.next()).thenReturn(true, false);
         when(rs.getString("user")).thenReturn(username);
         when(rs.getString("realname")).thenReturn(realname);
@@ -82,8 +82,8 @@ class UserDaoTest {
         final String username = "testuser";
 
         when(ds.getConnection()).thenReturn(conn);
-        when(conn.createStatement()).thenReturn(stmt);
-        when(stmt.executeQuery(anyString())).thenReturn(rs);
+        when(conn.prepareStatement("SELECT user, realname FROM user WHERE id = ?")).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(rs);
         when(rs.next()).thenReturn(false);
 
         UserDao userDao = new UserDao(ds);
