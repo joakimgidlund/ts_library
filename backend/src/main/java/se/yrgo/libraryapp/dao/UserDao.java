@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import se.yrgo.libraryapp.entities.*;
-import se.yrgo.libraryapp.services.UserService;
 
 public class UserDao {
     private static Logger logger = LoggerFactory.getLogger(UserDao.class);
@@ -24,10 +23,12 @@ public class UserDao {
     }
 
     public Optional<User> get(String id) {
+        String query = "SELECT user, realname FROM user WHERE id = ?";
         try (Connection conn = ds.getConnection();
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt
-                        .executeQuery("SELECT user, realname FROM user WHERE id = '" + id + "'")) {
+                PreparedStatement stmt = conn.prepareStatement(query);) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+
             if (rs.next()) {
                 String name = rs.getString("user");
                 String realname = rs.getString("realname");
@@ -41,10 +42,12 @@ public class UserDao {
     }
 
     public Optional<LoginInfo> getLoginInfo(String user) {
+        String query = "SELECT id, password_hash FROM user WHERE user = ?";
         try (Connection conn = ds.getConnection();
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(
-                        "SELECT id, password_hash FROM user WHERE user = '" + user + "'")) {
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, user);
+            ResultSet rs = stmt.executeQuery();
+
             if (rs.next()) {
                 int id = rs.getInt("id");
                 UserId userId = UserId.of(id);
@@ -85,18 +88,22 @@ public class UserDao {
 
     private boolean insertUserAndRole(String name, String realname, String passwordHash,
             Connection conn) throws SQLException {
-        String insertUser = "INSERT INTO user (user, realname, password_hash) VALUES ('" + name
-                + "', '" + realname + "', '" + passwordHash + "')";
+        String insertUser = "INSERT INTO user (user, realname, password_hash) VALUES (?, ?, ?)";
 
-        try (Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate(insertUser, Statement.RETURN_GENERATED_KEYS);
+        try (PreparedStatement stmt = conn.prepareStatement(insertUser, Statement.RETURN_GENERATED_KEYS)) {
+            if(!realname.matches("[a-zA-Z\\s]+$")) { //Incomplete regex, names could contain many special characters. But starting with a strict rule.
+                throw new SQLException();
+            }
+            stmt.setString(1, name);
+            stmt.setString(2, realname);
+            stmt.setString(3, passwordHash);
+            stmt.executeUpdate();
             UserId userId = getGeneratedUserId(stmt);
 
             if (userId.getId() > 0 && addToUserRole(conn, userId)) {
                 conn.commit();
                 return true;
-            }
-            else {
+            } else {
                 conn.rollback();
                 return false;
             }
@@ -109,7 +116,7 @@ public class UserDao {
         }
     }
 
-    private UserId getGeneratedUserId(Statement stmt) throws SQLException {
+    private UserId getGeneratedUserId(PreparedStatement stmt) throws SQLException {
         try (ResultSet rs = stmt.getGeneratedKeys()) {
             rs.next();
             return UserId.of(rs.getInt(1));
@@ -117,10 +124,11 @@ public class UserDao {
     }
 
     private boolean addToUserRole(Connection conn, UserId user) throws SQLException {
-        String insertRole = "INSERT INTO user_role (user_id, role_id) VALUES (" + user + ", 2)";
+        String insertRole = "INSERT INTO user_role (user_id, role_id) VALUES (?, 2)";
 
-        try (Statement stmt = conn.createStatement()) {
-            return stmt.executeUpdate(insertRole) == 1;
+        try (PreparedStatement stmt = conn.prepareStatement(insertRole)) {
+            stmt.setInt(1, user.getId());
+            return stmt.executeUpdate() == 1;
         }
     }
 }
