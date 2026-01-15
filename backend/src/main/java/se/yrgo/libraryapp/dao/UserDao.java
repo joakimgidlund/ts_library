@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -89,11 +90,14 @@ public class UserDao {
             Connection conn) throws SQLException {
         String insertUser = "INSERT INTO user (user, realname, password_hash) VALUES (?, ?, ?)";
 
-        try (PreparedStatement stmt = conn.prepareStatement(insertUser)) {
+        try (PreparedStatement stmt = conn.prepareStatement(insertUser, Statement.RETURN_GENERATED_KEYS)) {
+            if(!realname.matches("[a-zA-Z\\s]+$")) { //Incomplete regex, names could contain many special characters. But starting with a strict rule.
+                throw new SQLException();
+            }
             stmt.setString(1, name);
             stmt.setString(2, realname);
             stmt.setString(3, passwordHash);
-            stmt.executeQuery();
+            stmt.executeUpdate();
             UserId userId = getGeneratedUserId(stmt);
 
             if (userId.getId() > 0 && addToUserRole(conn, userId)) {
@@ -124,7 +128,7 @@ public class UserDao {
 
         try (PreparedStatement stmt = conn.prepareStatement(insertRole)) {
             stmt.setInt(1, user.getId());
-            return stmt.executeUpdate(insertRole) == 1;
+            return stmt.executeUpdate() == 1;
         }
     }
 }
